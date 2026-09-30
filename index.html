@@ -1,0 +1,545 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>SipMile — MPG to L/100km Fuel Efficiency Converter & Trip Cost Calculator</title>
+<meta name="description" content="SipMile converts fuel efficiency between MPG (US gallon), MPG (UK gallon), L/100km and km/L. Instantly see US vs UK MPG differences, get an efficiency rating, and calculate fuel cost per trip, per 100 km and per 100 miles. Free, unlimited, no signup.">
+<meta property="og:title" content="SipMile — Fuel Efficiency Converter">
+<meta property="og:description" content="Convert MPG (US & UK gallons), L/100km and km/L instantly. Includes efficiency ratings and a trip fuel-cost calculator.">
+<meta property="og:type" content="website">
+<script src="https://cdn.tailwindcss.com"></script>
+<style>
+  :root { --green:#166534; --yellow:#FDE047; --charcoal:#1C1917; }
+  body { background:#F7F5F0; }
+  .road-dash { height:6px; background-image:repeating-linear-gradient(90deg, var(--yellow) 0 34px, transparent 34px 64px); }
+  .gauge-fill { transition: width .6s cubic-bezier(.2,.8,.2,1); }
+  #gauge-needle { transition: left .6s cubic-bezier(.2,.8,.2,1); }
+  input[type=number]::-webkit-inner-spin-button { opacity:.4; }
+  .card { box-shadow: 0 10px 30px -12px rgba(28,25,23,.25); }
+</style>
+</head>
+<body id="top" class="text-stone-900 antialiased">
+
+<!-- ============ STICKY HEADER ============ -->
+<header class="sticky top-0 z-50" style="background:#1C1917">
+  <div class="mx-auto max-w-6xl px-4 sm:px-6 h-16 flex items-center justify-between">
+    <a href="#top" class="flex items-center gap-2.5">
+      <span class="inline-flex items-center justify-center w-9 h-9 rounded-xl" style="background:#FDE047">
+        <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#1C1917" stroke-width="2.4" stroke-linecap="round">
+          <path d="M3 18h18"/><path d="M6 18v-4a1 1 0 0 1 1-1h1l2-8h4l2 8h1a1 1 0 0 1 1 1v4"/><circle cx="8" cy="18" r="1.8"/><circle cx="16" cy="18" r="1.8"/>
+        </svg>
+      </span>
+      <span class="text-xl font-extrabold tracking-tight text-white">Sip<span style="color:#FDE047">Mile</span></span>
+    </a>
+    <nav class="text-sm font-semibold">
+      <a href="#top" class="text-stone-300 hover:text-white mr-5 transition">Home</a>
+      <a href="https://fixoraa.tech" class="px-3.5 py-2 rounded-full text-stone-900 font-bold transition hover:brightness-110" style="background:#FDE047">More Tools</a>
+    </nav>
+  </div>
+  <div class="road-dash"></div>
+</header>
+
+<!-- ============ HERO ============ -->
+<section class="mx-auto max-w-6xl px-4 sm:px-6 pt-10 pb-2 text-center">
+  <span class="inline-block text-xs font-bold uppercase tracking-widest px-3 py-1.5 rounded-full text-white" style="background:#166534">Unlimited Free Usage · No Signup</span>
+  <h1 class="mt-4 text-3xl sm:text-5xl font-extrabold tracking-tight" style="color:#1C1917">Fuel Efficiency Converter<br class="sm:hidden"> <span style="color:#166534">&amp; Trip Cost Calculator</span></h1>
+  <p class="mt-3 text-stone-600 max-w-2xl mx-auto text-sm sm:text-base">Convert between <strong>MPG (US gallon)</strong>, <strong>MPG (UK gallon)</strong>, <strong>L/100km</strong> and <strong>km/L</strong> — never mix up US and UK gallons again — then rate your car's efficiency and price any trip.</p>
+</section>
+
+<!-- TOP AD -->
+<div class="no-print mx-auto max-w-6xl px-4 sm:px-6 pt-4" role="complementary" aria-label="Advertisement">
+  <div class="mx-auto text-center" style="max-width:728px">
+    <span class="block text-[10px] tracking-[0.18em] uppercase text-slate-400 mb-1.5">Advertisement</span>
+    <div class="flex justify-center overflow-hidden">
+      <div class="origin-top scale-[0.44] sm:scale-100 shrink-0">
+        <script>
+          atOptions = { 'key' : '4e68ac77881c17fe128a46565d9a4e8c', 'format' : 'iframe', 'height' : 90, 'width' : 728, 'params' : {} };
+        </script>
+        <script src="https://www.highrevenueformat.com/4e68ac77881c17fe128a46565d9a4e8c/invoke.js"></script>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ============ TOOL ============ -->
+<main class="mx-auto max-w-6xl px-4 sm:px-6 py-6">
+
+  <!-- CONVERTER HERO -->
+  <section class="card rounded-3xl p-5 sm:p-8 text-white" style="background:#166534">
+    <div class="flex items-center gap-3 mb-5">
+      <span class="text-2xl">⛽</span>
+      <div>
+        <h2 class="text-xl sm:text-2xl font-extrabold">Efficiency Converter</h2>
+        <p class="text-green-100/90 text-sm">Type any value — all four units update instantly.</p>
+      </div>
+    </div>
+
+    <div class="grid sm:grid-cols-[1fr_1fr] gap-4 items-end">
+      <div>
+        <label for="conv-value" class="block text-xs font-bold uppercase tracking-widest text-green-200 mb-1.5">Value</label>
+        <input id="conv-value" type="number" inputmode="decimal" min="0" step="any" value="35" placeholder="e.g. 35"
+               class="w-full rounded-2xl px-4 py-3.5 text-2xl font-extrabold text-stone-900 outline-none focus:ring-4 focus:ring-yellow-300">
+      </div>
+      <div>
+        <label for="conv-unit" class="block text-xs font-bold uppercase tracking-widest text-green-200 mb-1.5">Unit</label>
+        <select id="conv-unit" class="w-full rounded-2xl px-4 py-3.5 text-lg font-bold text-stone-900 outline-none focus:ring-4 focus:ring-yellow-300">
+          <option value="usMpg">MPG — US gallon (3.785 L)</option>
+          <option value="ukMpg">MPG — UK gallon (4.546 L)</option>
+          <option value="l100">L / 100 km</option>
+          <option value="kmL">km / L</option>
+        </select>
+      </div>
+    </div>
+    <p id="conv-error" class="hidden mt-3 text-sm font-semibold rounded-xl px-4 py-2" style="background:#FDE047;color:#1C1917"></p>
+
+    <div class="mt-5 grid grid-cols-2 lg:grid-cols-4 gap-3">
+      <div class="rounded-2xl p-4" style="background:rgba(0,0,0,.28)">
+        <p class="text-[11px] font-bold uppercase tracking-widest text-green-200">MPG · US gallon</p>
+        <p class="text-2xl sm:text-3xl font-extrabold mt-1" id="r-us" style="color:#FDE047">–</p>
+        <p class="text-[11px] text-green-100/70 mt-1">1 US gal = 3.785 L</p>
+      </div>
+      <div class="rounded-2xl p-4" style="background:rgba(0,0,0,.28)">
+        <p class="text-[11px] font-bold uppercase tracking-widest text-green-200">MPG · UK gallon</p>
+        <p class="text-2xl sm:text-3xl font-extrabold mt-1" id="r-uk" style="color:#FDE047">–</p>
+        <p class="text-[11px] text-green-100/70 mt-1">1 UK gal = 4.546 L</p>
+      </div>
+      <div class="rounded-2xl p-4" style="background:rgba(0,0,0,.28)">
+        <p class="text-[11px] font-bold uppercase tracking-widest text-green-200">Litres / 100 km</p>
+        <p class="text-2xl sm:text-3xl font-extrabold mt-1" id="r-l100" style="color:#FDE047">–</p>
+        <p class="text-[11px] text-green-100/70 mt-1">Lower = more efficient</p>
+      </div>
+      <div class="rounded-2xl p-4" style="background:rgba(0,0,0,.28)">
+        <p class="text-[11px] font-bold uppercase tracking-widest text-green-200">km / Litre</p>
+        <p class="text-2xl sm:text-3xl font-extrabold mt-1" id="r-kml" style="color:#FDE047">–</p>
+        <p class="text-[11px] text-green-100/70 mt-1">Higher = more efficient</p>
+      </div>
+    </div>
+
+    <div class="mt-4 rounded-2xl p-4 text-sm" style="background:rgba(0,0,0,.22)">
+      <p class="font-bold" style="color:#FDE047">⚠️ US vs UK MPG — read this before you compare cars</p>
+      <p class="text-green-50/90 mt-1">A UK (imperial) gallon is <strong>~20% bigger</strong> than a US gallon (4.546 L vs 3.785 L). So the <strong>same car</strong> scores a higher number in UK MPG than US MPG. A British review saying “60 MPG” equals only about <strong>50 MPG (US)</strong>. SipMile always labels which gallon is which — most converters don't.</p>
+    </div>
+  </section>
+
+  <div class="road-dash my-6 rounded-full"></div>
+
+  <!-- RATING GAUGE -->
+  <section class="card rounded-3xl p-5 sm:p-8 bg-white">
+    <div class="flex items-center gap-3 mb-2">
+      <span class="text-2xl">🛣️</span>
+      <div>
+        <h2 class="text-xl sm:text-2xl font-extrabold" style="color:#1C1917">Efficiency Rating</h2>
+        <p class="text-stone-500 text-sm">Where does your car land? Follows your converter value above.</p>
+      </div>
+    </div>
+    <div class="mt-5 relative">
+      <div class="flex h-7 rounded-full overflow-hidden">
+        <div class="gauge-fill" style="width:25%;background:#16A34A"></div>
+        <div class="gauge-fill" style="width:25%;background:#84CC16"></div>
+        <div class="gauge-fill" style="width:25%;background:#FACC15"></div>
+        <div class="gauge-fill" style="width:25%;background:#EF4444"></div>
+      </div>
+      <div id="gauge-needle" class="absolute -top-2" style="left:0%">
+        <div class="w-1.5 h-11 mx-auto rounded-full bg-stone-900"></div>
+      </div>
+      <div class="flex justify-between text-[11px] font-bold text-stone-500 mt-2">
+        <span>Excellent<br>≤ 5 L/100km</span>
+        <span class="text-center">Good<br>5–7</span>
+        <span class="text-center">Average<br>7–10</span>
+        <span class="text-right">Poor<br>&gt; 10</span>
+      </div>
+    </div>
+    <div class="mt-4 flex flex-col sm:flex-row gap-4 items-start sm:items-center">
+      <span id="rating-pill" class="text-2xl font-extrabold px-5 py-2 rounded-full text-white" style="background:#166534">–</span>
+      <p id="rating-blurb" class="text-stone-600 text-sm sm:text-base">Enter a value in the converter to see your rating.</p>
+    </div>
+    <div class="mt-4 rounded-2xl p-4 text-sm border-l-4" style="border-color:#166534;background:#F0FDF4">
+      <p class="font-bold text-stone-900">🔌 Driving an EV or plug-in hybrid?</p>
+      <p class="text-stone-600 mt-1">EVs are rated in <strong>kWh/100 km</strong>, not litres — but the efficiency idea is identical. A typical EV uses ~15 kWh/100 km, which at average electricity prices costs about the same as a petrol car doing <strong>~2 L/100 km (Excellent)</strong>. Plug any fuel car's figure into the converter above to compare your EV against the bands.</p>
+    </div>
+  </section>
+
+  <div class="road-dash my-6 rounded-full"></div>
+
+  <!-- TRIP COST -->
+  <section class="card rounded-3xl p-5 sm:p-8 text-white" style="background:#1C1917">
+    <div class="flex items-center gap-3 mb-5">
+      <span class="text-2xl">🧭</span>
+      <div>
+        <h2 class="text-xl sm:text-2xl font-extrabold">Trip Fuel-Cost Calculator</h2>
+        <p class="text-stone-400 text-sm">Uses your converter's efficiency. Adjust price &amp; distance — costs update live.</p>
+      </div>
+    </div>
+
+    <div class="grid sm:grid-cols-2 lg:grid-cols-4 gap-4">
+      <div>
+        <label for="tc-currency" class="block text-xs font-bold uppercase tracking-widest text-stone-400 mb-1.5">Currency</label>
+        <input id="tc-currency" type="text" maxlength="4" value="$" class="w-full rounded-xl px-4 py-3 text-lg font-bold bg-stone-800 text-white outline-none focus:ring-4 focus:ring-yellow-300/60">
+      </div>
+      <div>
+        <label for="tc-price" class="block text-xs font-bold uppercase tracking-widest text-stone-400 mb-1.5">Fuel price / litre</label>
+        <input id="tc-price" type="number" inputmode="decimal" min="0" step="any" value="1.50" class="w-full rounded-xl px-4 py-3 text-lg font-bold bg-stone-800 text-white outline-none focus:ring-4 focus:ring-yellow-300/60">
+      </div>
+      <div>
+        <label for="tc-dist" class="block text-xs font-bold uppercase tracking-widest text-stone-400 mb-1.5">Trip distance</label>
+        <input id="tc-dist" type="number" inputmode="decimal" min="0" step="any" value="350" class="w-full rounded-xl px-4 py-3 text-lg font-bold bg-stone-800 text-white outline-none focus:ring-4 focus:ring-yellow-300/60">
+      </div>
+      <div>
+        <label for="tc-unit" class="block text-xs font-bold uppercase tracking-widest text-stone-400 mb-1.5">Distance unit</label>
+        <select id="tc-unit" class="w-full rounded-xl px-4 py-3 text-lg font-bold bg-stone-800 text-white outline-none focus:ring-4 focus:ring-yellow-300/60">
+          <option value="km">kilometres (km)</option>
+          <option value="mi">miles (mi)</option>
+        </select>
+      </div>
+    </div>
+    <p id="tc-error" class="hidden mt-3 text-sm font-semibold rounded-xl px-4 py-2" style="background:#FDE047;color:#1C1917"></p>
+
+    <div class="mt-5 grid grid-cols-2 lg:grid-cols-4 gap-3">
+      <div class="rounded-2xl p-4 bg-stone-800">
+        <p class="text-[11px] font-bold uppercase tracking-widest text-stone-400">Fuel used</p>
+        <p class="text-2xl sm:text-3xl font-extrabold mt-1" style="color:#FDE047"><span id="tc-litres">–</span> <span class="text-sm font-bold text-stone-400">L</span></p>
+      </div>
+      <div class="rounded-2xl p-4" style="background:#166534">
+        <p class="text-[11px] font-bold uppercase tracking-widest text-green-200">Trip cost</p>
+        <p class="text-2xl sm:text-3xl font-extrabold mt-1" style="color:#FDE047"><span id="tc-cur1">–</span><span id="tc-cost">–</span></p>
+      </div>
+      <div class="rounded-2xl p-4 bg-stone-800">
+        <p class="text-[11px] font-bold uppercase tracking-widest text-stone-400">Cost / 100 km</p>
+        <p class="text-2xl sm:text-3xl font-extrabold mt-1" style="color:#FDE047"><span id="tc-cur2">–</span><span id="tc-c100km">–</span></p>
+      </div>
+      <div class="rounded-2xl p-4 bg-stone-800">
+        <p class="text-[11px] font-bold uppercase tracking-widest text-stone-400">Cost / 100 miles</p>
+        <p class="text-2xl sm:text-3xl font-extrabold mt-1" style="color:#FDE047"><span id="tc-cur3">–</span><span id="tc-c100mi">–</span></p>
+      </div>
+    </div>
+  </section>
+</main>
+
+<!-- BOTTOM AD -->
+<div class="no-print mx-auto max-w-6xl px-4 sm:px-6 pb-4" role="complementary" aria-label="Advertisement">
+  <div class="mx-auto text-center" style="max-width:728px">
+    <span class="block text-[10px] tracking-[0.18em] uppercase text-slate-400 mb-1.5">Advertisement</span>
+    <div class="flex justify-center overflow-hidden">
+      <script async src="https://js.wpadmngr.com/static/adManager.js" data-admpid="464498"></script>
+    </div>
+  </div>
+</div>
+
+<!-- ============ SEO ARTICLE + FAQS ============ -->
+<article class="mx-auto max-w-4xl px-4 sm:px-6 py-10 text-stone-700">
+  <h2 class="text-2xl sm:text-3xl font-extrabold mb-6" style="color:#1C1917">Fuel Efficiency Explained: MPG (US &amp; UK), L/100km, km/L — and What They Cost You</h2>
+
+  <h3 class="text-xl font-bold mt-8 mb-3" style="color:#166534">Why the world measures fuel efficiency four different ways</h3>
+  <p class="mb-4">Walk into a car dealership in Detroit, London, Berlin or Delhi and you will hear four completely different answers to the same question: “how much fuel does it use?” In the United States the answer comes in miles per gallon (MPG), in Britain it is also MPG but a meaningfully different one, across most of Europe it is litres per 100 kilometres, and in India, Japan and much of Asia it is kilometres per litre. A fuel efficiency converter exists because none of these numbers can be compared directly — and because one of them is a trap that has confused drivers and car reviewers for decades. This guide explains every unit, the exact maths behind each conversion, the notorious US vs UK gallon difference, how to rate any car's efficiency, and how to turn an efficiency figure into a real money number for your next road trip.</p>
+
+  <h3 class="text-xl font-bold mt-8 mb-3" style="color:#166534">The four units, precisely defined</h3>
+  <p class="mb-4"><strong>Miles per gallon (MPG, US)</strong> is distance travelled per US gallon of fuel. One US gallon is defined as exactly 3.78541 litres. Higher numbers mean better efficiency: a 35 MPG (US) car travels 35 miles on each US gallon it burns. This is the standard measurement on American window stickers and in US car reviews.</p>
+  <p class="mb-4"><strong>Miles per gallon (MPG, UK)</strong> is distance travelled per imperial gallon. One imperial gallon is exactly 4.54609 litres — about 20.1% larger than the US gallon. Because the gallon is bigger, the same car always scores a higher MPG figure in Britain than in America. A car that manages 35 MPG in the US manages about 42 MPG in the UK, with zero change in actual fuel consumption. This is the single most common source of confusion in fuel economy discussions online: a British reviewer praising a car's “50 MPG” is describing what an American would call roughly 41.7 MPG.</p>
+  <p class="mb-4"><strong>Litres per 100 kilometres (L/100km)</strong> is the volume of fuel consumed to travel 100 km, and it is the legal standard in the European Union, Australia, China and many other markets. Crucially, it works in the opposite direction from MPG: a <em>lower</em> number is better. A car rated at 5 L/100km is more efficient than one rated at 8 L/100km. The unit's big advantage is that fuel use scales linearly with it — double the L/100km and you exactly double the fuel bill for the same trip, which is not intuitive with MPG.</p>
+  <p class="mb-4"><strong>Kilometres per litre (km/L)</strong> is distance per litre of fuel and is the default in India, Japan, Brazil and much of Southeast Asia. It behaves like MPG — higher is better — but with metric units. Indian buyers in particular know it as “mileage”: when someone says a bike gives “45 ka mileage”, they mean 45 km/L.</p>
+
+  <h3 class="text-xl font-bold mt-8 mb-3" style="color:#166534">The exact conversion maths (no approximations)</h3>
+  <p class="mb-4">Every conversion between these units is a closed-form calculation — no lookup tables, no estimates. The master constant for US MPG is <strong>235.214583</strong>: divide it by any US MPG figure and you get L/100km. So 35 MPG (US) equals 235.214583 ÷ 35 = 6.72 L/100km. The UK master constant is <strong>282.480936</strong>: 42 MPG (UK) equals 282.480936 ÷ 42 = 6.73 L/100km — confirming that 35 US MPG and 42 UK MPG describe the same physical car. Between the two MPG standards the ratio is simply the ratio of the gallons: 1 UK gallon = 1.20095 US gallons, so multiply US MPG by 1.20095 to get UK MPG, or divide UK MPG by 1.20095 to get US MPG. Between km/L and L/100km the relationship is beautifully simple: they are reciprocals scaled by 100, so km/L = 100 ÷ L/100km. A car at 6.72 L/100km therefore does 14.88 km/L.</p>
+
+  <h3 class="text-xl font-bold mt-8 mb-3" style="color:#166534">The US vs UK MPG difference: why it matters in the real world</h3>
+  <p class="mb-4">The imperial gallon traces back to the British Weights and Measures Act tradition and was standardised at 4.54609 litres; the US gallon descends from the older English wine gallon at 3.78541 litres. When Britain kept selling fuel economy in MPG after metrication, the number quietly diverged from America's. The practical consequences are everywhere. Comparing a British and an American review of the same model without converting gives you a phantom 20% difference. Imported-car listings sometimes carry the wrong country's figure. And fuel-cost estimates built on the wrong gallon can be off by a fifth. Whenever you see an MPG number, your first question should be: <em>which gallon?</em> SipMile's converter labels every result explicitly — “MPG · US gallon” and “MPG · UK gallon” — so the ambiguity disappears.</p>
+
+  <h3 class="text-xl font-bold mt-8 mb-3" style="color:#166534">How to rate any car's efficiency: the bands</h3>
+  <p class="mb-4">Raw numbers mean little without context, so it helps to sort cars into bands. In L/100km terms — the unit engineers and regulators increasingly treat as the reference — a useful worldwide breakdown is: <strong>Excellent, 5 L/100km or under</strong> (full hybrids like the Toyota Prius, small efficient diesels, and the cost-equivalent of most EVs); <strong>Good, 5–7 L/100km</strong> (modern compact petrol cars, efficient crossovers); <strong>Average, 7–10 L/100km</strong> (typical mid-size sedans and family SUVs, where most new cars still sit); and <strong>Poor, above 10 L/100km</strong> (large SUVs, performance cars, pickups and anything built before efficiency became a selling point). In US MPG those bands are roughly: excellent ≥ 47 MPG, good 34–47, average 24–34, poor below 24. In UK MPG: excellent ≥ 56, good 41–56, average 28–41, poor below 28. And in km/L: excellent ≥ 20, good 14–20, average 10–14, poor below 10. Bear in mind that official laboratory figures are optimistic — real-world driving usually lands one band worse, especially for hybrids in cold weather or diesels in stop-start traffic.</p>
+
+  <h3 class="text-xl font-bold mt-8 mb-3" style="color:#166534">EVs and plug-in hybrids: the same idea, different unit</h3>
+  <p class="mb-4">Electric vehicles don't burn litres, so they are rated in <strong>kWh per 100 km</strong> — the exact electrical twin of L/100km. A typical modern EV consumes 14–18 kWh/100 km; an efficient one dips under 13. To compare an EV's running cost with a petrol car, convert the electricity to money: at $0.15 per kWh, 15 kWh/100 km costs $2.25 per 100 km — the same as a petrol car doing roughly 1.5 L/100 km at $1.50/L, deep in the Excellent band. That is why EVs cluster far beyond even the best hybrids on any efficiency scale. Plug-in hybrids are the awkward middle: their official figures assume frequent charging, so an unplugged PHEV often scores in the Average or Poor band in real use. If you are cross-shopping, run both the petrol and electric figures through the trip-cost calculator with your local fuel and electricity prices — the answer is rarely what the brochure implies.</p>
+
+  <h3 class="text-xl font-bold mt-8 mb-3" style="color:#166534">From efficiency to money: the trip-cost formula</h3>
+  <p class="mb-4">An efficiency figure becomes a budget the moment you multiply it by distance and price. The formula is: <strong>trip cost = (L/100km ÷ 100) × distance in km × price per litre</strong>. A 350 km road trip in a car doing 6.7 L/100km with fuel at $1.50/L burns (6.7 ÷ 100) × 350 = 23.45 litres and costs $35.18. The same trip in a 12 L/100km SUV costs $63.00 — nearly double, for the same journey. Two companion figures are worth knowing: <strong>cost per 100 km</strong> (L/100km × price per litre) is the cleanest way to compare cars' running costs, and <strong>cost per 100 miles</strong> is its American cousin. SipMile computes all three live, with an editable fuel price and currency symbol so the numbers match whatever is on the pump near you. Try this experiment: enter your car's real efficiency, then price your daily commute for a month. Most drivers are surprised twice — first by the monthly total, then by how much one band of efficiency improvement would save them in a year.</p>
+
+  <h3 class="text-xl font-bold mt-8 mb-3" style="color:#166534">Seven habits that genuinely move your number</h3>
+  <p class="mb-4">Conversions tell you where you stand; driving habits decide where you could be. The improvements below are measured, not folklore. <strong>1. Slow down on highways:</strong> aerodynamic drag rises with the square of speed, so dropping from 130 to 110 km/h typically cuts fuel use 15–20% — often a full rating band. <strong>2. Keep tyres at the placard pressure:</strong> under-inflation by 0.5 bar adds roughly 3% consumption and wears tyres faster. <strong>3. Ditch roof boxes and racks when empty:</strong> they can add 10–25% drag at motorway speeds. <strong>4. Combine short trips:</strong> a cold engine uses up to 50% more fuel for the first few kilometres; one warm trip beats three cold ones. <strong>5. Anticipate traffic:</strong> smooth acceleration and coasting to red lights beat stop-start sprinting by 10–20% in town. <strong>6. Cut idling:</strong> more than a minute of waiting? Switch off — modern starters handle it. <strong>7. Service on schedule:</strong> clogged air filters and worn spark plugs quietly push cars a band worse. Note what is <em>not</em> on this list: premium fuel in a car that doesn't require it, and most “fuel-saving” gadgets, which independent tests consistently show do nothing.</p>
+
+  <h3 class="text-xl font-bold mt-8 mb-3" style="color:#166534">A note on official figures vs your dashboard</h3>
+  <p class="mb-4">Official ratings — EPA in the US, WLTP in Europe and the UK — are laboratory tests designed for fair comparison, not prediction. WLTP figures are generally 10–20% optimistic versus mixed real-world driving; EPA numbers are closer but still flattering for aggressive drivers. The most honest number is your own: fill the tank, reset the trip meter, drive normally, refill, and divide litres by hundreds of kilometres. Feed that figure into SipMile's converter and rating gauge — it is the number your wallet actually experiences, and it is the right input for the trip-cost calculator before any long journey.</p>
+
+  <h2 class="text-2xl font-extrabold mt-12 mb-6" style="color:#1C1917">Frequently Asked Questions</h2>
+  <div class="space-y-5">
+    <div class="rounded-2xl bg-white p-5 card">
+      <h3 class="font-bold text-lg" style="color:#166534">How do I convert MPG to L/100km?</h3>
+      <p class="mt-2 text-sm sm:text-base">Divide 235.214583 by your US MPG, or 282.480936 by your UK MPG. For example, 35 MPG (US) ÷ 235.214583 = 6.72 L/100km, and 42 MPG (UK) = 6.73 L/100km. The key step is knowing which gallon your MPG figure uses — US and UK gallons differ by about 20%. SipMile's converter does this instantly and labels both gallons explicitly.</p>
+    </div>
+    <div class="rounded-2xl bg-white p-5 card">
+      <h3 class="font-bold text-lg" style="color:#166534">What is the difference between US MPG and UK MPG?</h3>
+      <p class="mt-2 text-sm sm:text-base">A US gallon is 3.78541 litres while a UK (imperial) gallon is 4.54609 litres — the UK gallon is about 20% larger. The same car therefore always shows a higher MPG number in Britain than in America: multiply US MPG by 1.20095 to get the equivalent UK MPG. A British “50 MPG” car is roughly 41.6 MPG in US terms.</p>
+    </div>
+    <div class="rounded-2xl bg-white p-5 card">
+      <h3 class="font-bold text-lg" style="color:#166534">Is a higher or lower L/100km better?</h3>
+      <p class="mt-2 text-sm sm:text-base">Lower is better. L/100km measures fuel <em>consumed</em> per 100 km, so 5 L/100km beats 8 L/100km. This is the opposite of MPG and km/L, where higher numbers mean better efficiency. Because it scales linearly, L/100km is the easiest unit for comparing fuel costs: double the L/100km, double the fuel bill for the same trip.</p>
+    </div>
+    <div class="rounded-2xl bg-white p-5 card">
+      <h3 class="font-bold text-lg" style="color:#166534">What is considered good fuel efficiency for a car?</h3>
+      <p class="mt-2 text-sm sm:text-base">In L/100km: 5 or under is excellent (hybrids and efficient small cars), 5–7 is good, 7–10 is average, and over 10 is poor. That translates to roughly 47+ MPG (US) / 56+ MPG (UK) / 20+ km/L for excellent, and below 24 MPG (US) / 28 MPG (UK) / 10 km/L for poor. Real-world driving usually scores about one band worse than official laboratory figures.</p>
+    </div>
+    <div class="rounded-2xl bg-white p-5 card">
+      <h3 class="font-bold text-lg" style="color:#166534">How do I calculate fuel cost for a road trip?</h3>
+      <p class="mt-2 text-sm sm:text-base">Use: (L/100km ÷ 100) × trip distance in km × fuel price per litre. For a 350 km trip at 6.7 L/100km with fuel at $1.50/L, that's (6.7 ÷ 100) × 350 × 1.50 = $35.18. SipMile's trip-cost calculator does this live — enter your efficiency, edit the fuel price and currency, set the distance in km or miles, and it shows total cost plus cost per 100 km and per 100 miles.</p>
+    </div>
+    <div class="rounded-2xl bg-white p-5 card">
+      <h3 class="font-bold text-lg" style="color:#166534">How does EV efficiency compare to petrol cars?</h3>
+      <p class="mt-2 text-sm sm:text-base">EVs are rated in kWh/100 km — the electrical twin of L/100km. A typical EV uses 14–18 kWh/100 km, which at common electricity prices costs about the same to run as a petrol car doing roughly 1.5–2.5 L/100 km — far beyond the Excellent band. Plug-in hybrids only reach their advertised figures if charged regularly; driven unplugged they often land in the Average or Poor band.</p>
+    </div>
+  </div>
+</article>
+
+<footer class="border-t border-stone-200">
+  <div class="road-dash"></div>
+  <div class="mx-auto max-w-6xl px-4 sm:px-6 py-8 flex flex-col sm:flex-row items-center justify-between gap-4 text-sm text-stone-500">
+    <p><strong class="text-stone-800">SipMile</strong> — free fuel efficiency converter &amp; trip cost calculator. No signup, no tracking of your data; everything runs in your browser.</p>
+    <a href="https://fixoraa.tech" class="font-bold hover:underline" style="color:#166534">More Tools →</a>
+  </div>
+</footer>
+
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "FAQPage",
+  "mainEntity": [
+    {
+      "@type": "Question",
+      "name": "How do I convert MPG to L/100km?",
+      "acceptedAnswer": { "@type": "Answer", "text": "Divide 235.214583 by your US MPG, or 282.480936 by your UK MPG. For example, 35 MPG (US) = 6.72 L/100km, and 42 MPG (UK) = 6.73 L/100km. The key step is knowing which gallon your MPG figure uses — US and UK gallons differ by about 20%." }
+    },
+    {
+      "@type": "Question",
+      "name": "What is the difference between US MPG and UK MPG?",
+      "acceptedAnswer": { "@type": "Answer", "text": "A US gallon is 3.78541 litres while a UK (imperial) gallon is 4.54609 litres — the UK gallon is about 20% larger. The same car always shows a higher MPG number in Britain than in America: multiply US MPG by 1.20095 to get the equivalent UK MPG." }
+    },
+    {
+      "@type": "Question",
+      "name": "Is a higher or lower L/100km better?",
+      "acceptedAnswer": { "@type": "Answer", "text": "Lower is better. L/100km measures fuel consumed per 100 km, so 5 L/100km beats 8 L/100km. This is the opposite of MPG and km/L, where higher numbers mean better efficiency." }
+    },
+    {
+      "@type": "Question",
+      "name": "What is considered good fuel efficiency for a car?",
+      "acceptedAnswer": { "@type": "Answer", "text": "In L/100km: 5 or under is excellent, 5–7 is good, 7–10 is average, and over 10 is poor. That is roughly 47+ MPG (US) / 56+ MPG (UK) / 20+ km/L for excellent, and below 24 MPG (US) / 28 MPG (UK) / 10 km/L for poor." }
+    },
+    {
+      "@type": "Question",
+      "name": "How do I calculate fuel cost for a road trip?",
+      "acceptedAnswer": { "@type": "Answer", "text": "Use: (L/100km ÷ 100) × trip distance in km × fuel price per litre. For a 350 km trip at 6.7 L/100km with fuel at $1.50/L, that is (6.7 ÷ 100) × 350 × 1.50 = $35.18." }
+    },
+    {
+      "@type": "Question",
+      "name": "How does EV efficiency compare to petrol cars?",
+      "acceptedAnswer": { "@type": "Answer", "text": "EVs are rated in kWh/100 km. A typical EV uses 14–18 kWh/100 km, which at common electricity prices costs about the same to run as a petrol car doing roughly 1.5–2.5 L/100 km — far beyond the Excellent band." }
+    }
+  ]
+}
+</script>
+
+<script id="sipmile-lib">
+// SipMile core math — pure functions, no DOM. (Inlined verbatim into sipmile.html)
+'use strict';
+
+const US_GAL_L = 3.78541;   // litres per US gallon (exact by task spec)
+const UK_GAL_L = 4.54609;   // litres per imperial (UK) gallon (exact by task spec)
+const MI_TO_KM = 1.609344;  // kilometres per mile
+const KM_TO_MI = 1 / 1.609344;
+const US_PER_UK_GAL = UK_GAL_L / US_GAL_L; // ≈ 1.20095
+
+// Conversion constants for mpg -> L/100km
+const US_MPG_K = (100 * US_GAL_L) / MI_TO_KM; // 235.214583...
+const UK_MPG_K = (100 * UK_GAL_L) / MI_TO_KM; // 282.480936...
+
+// --- conversions -----------------------------------------------------------
+// All converters take a finite positive number; non-positive input -> null.
+function fromUsMpg(mpg) {
+  if (!isFiniteNumber(mpg) || mpg <= 0) return null;
+  const l100 = US_MPG_K / mpg;
+  const kmL = 100 / l100;
+  const ukMpg = mpg * US_PER_UK_GAL;
+  return { l100, kmL, usMpg: mpg, ukMpg };
+}
+function fromUkMpg(mpg) {
+  if (!isFiniteNumber(mpg) || mpg <= 0) return null;
+  const l100 = UK_MPG_K / mpg;
+  const kmL = 100 / l100;
+  const usMpg = mpg / US_PER_UK_GAL;
+  return { l100, kmL, usMpg, ukMpg: mpg };
+}
+function fromL100(l) {
+  if (!isFiniteNumber(l) || l <= 0) return null;
+  const kmL = 100 / l;
+  const usMpg = US_MPG_K / l;
+  const ukMpg = UK_MPG_K / l;
+  return { l100: l, kmL, usMpg, ukMpg };
+}
+function fromKmL(kmL) {
+  if (!isFiniteNumber(kmL) || kmL <= 0) return null;
+  return fromL100(100 / kmL);
+}
+
+// Convenience: convert a value from one named unit to another named unit.
+// unit ∈ 'usMpg' | 'ukMpg' | 'l100' | 'kmL'
+function convertEfficiency(value, fromUnit, toUnit) {
+  const r = {
+    usMpg: fromUsMpg,
+    ukMpg: fromUkMpg,
+    l100: fromL100,
+    kmL: fromKmL,
+  }[fromUnit];
+  if (!r) return null;
+  const out = r(value);
+  if (!out) return null;
+  return out[toUnit] == null ? null : out[toUnit];
+}
+
+// --- rating bands (based on L/100km) ---------------------------------------
+const RATING_BANDS = [
+  { id: 'excellent', label: 'Excellent', min: 0,       max: 5.0,  color: '#16A34A', blurb: 'Hybrid/EV territory. One of the most efficient vehicles on the road.' },
+  { id: 'good',      label: 'Good',      min: 5.0,     max: 7.0,  color: '#84CC16', blurb: 'Solid modern economy car. Nothing to complain about.' },
+  { id: 'average',   label: 'Average',   min: 7.0,     max: 10.0, color: '#FACC15', blurb: 'Typical for mid-size cars and crossovers. Room to improve.' },
+  { id: 'poor',      label: 'Poor',      min: 10.0,    max: Infinity, color: '#EF4444', blurb: 'Thirsty. Big SUVs, sports cars and trucks live here.' },
+];
+
+function ratingForL100(l) {
+  if (!isFiniteNumber(l) || l <= 0) return null;
+  for (const b of RATING_BANDS) {
+    if (l >= b.min && l < b.max) return b;
+  }
+  return RATING_BANDS[RATING_BANDS.length - 1];
+}
+
+// Position of the gauge needle as 0..1 fraction of the band bar scale.
+function gaugePosition(l) {
+  if (!isFiniteNumber(l) || l <= 0) return null;
+  const min = 0, max = 20; // scale L/100km
+  return Math.min(1, Math.max(0, (l - min) / (max - min)));
+}
+
+// --- trip cost --------------------------------------------------------------
+// pricePerLitre: money per litre; distance: trip length; distanceUnit: 'km'|'mi'
+function tripCost(l100, pricePerLitre, distance, distanceUnit) {
+  if (!isFiniteNumber(l100) || l100 <= 0) return null;
+  if (!isFiniteNumber(pricePerLitre) || pricePerLitre < 0) return null;
+  if (!isFiniteNumber(distance) || distance < 0) return null;
+  const km = distanceUnit === 'mi' ? distance * MI_TO_KM : distance;
+  const litres = (l100 * km) / 100;
+  const cost = litres * pricePerLitre;
+  const costPer100km = l100 * pricePerLitre;
+  const costPer100mi = costPer100km * (100 * MI_TO_KM) / 100; // per 100 miles
+  return { litres, cost, costPer100km, costPer100mi, km };
+}
+
+function isFiniteNumber(x) {
+  return typeof x === 'number' && Number.isFinite(x);
+}
+
+function round2(x) { return Math.round(x * 100) / 100; }
+function round3(x) { return Math.round(x * 1000) / 1000; }
+
+if (typeof module !== 'undefined' && module.exports) {
+  module.exports = {
+    US_GAL_L, UK_GAL_L, MI_TO_KM, US_PER_UK_GAL, US_MPG_K, UK_MPG_K,
+    fromUsMpg, fromUkMpg, fromL100, fromKmL, convertEfficiency,
+    RATING_BANDS, ratingForL100, gaugePosition,
+    tripCost, isFiniteNumber, round2, round3,
+  };
+}
+
+</script>
+
+<script>
+(function(){
+  "use strict";
+  var $ = function(id){ return document.getElementById(id); };
+  var cv = $('conv-value'), cu = $('conv-unit');
+  var ru=$('r-us'), rk=$('r-uk'), rl=$('r-l100'), rm=$('r-kml');
+  var cerr = $('conv-error');
+  var needle = $('gauge-needle'), pill = $('rating-pill'), blurb = $('rating-blurb');
+  var tcur=$('tc-currency'), tpr=$('tc-price'), tdi=$('tc-dist'), tun=$('tc-unit');
+  var tcerr = $('tc-error');
+
+  // restore prefs
+  try {
+    var p = JSON.parse(localStorage.getItem('sipmile-prefs')||'{}');
+    if (p.currency) tcur.value = p.currency;
+    if (p.price) tpr.value = p.price;
+    if (p.unit) cu.value = p.unit;
+    if (p.tunit) tun.value = p.tunit;
+  } catch(e){}
+
+  function fmt(x, d){ return Number(x).toFixed(d==null?2:d); }
+
+  function showConvError(msg){
+    if(!msg){ cerr.classList.add('hidden'); return; }
+    cerr.textContent = msg; cerr.classList.remove('hidden');
+  }
+
+  function update(){
+    var v = parseFloat(cv.value), u = cu.value;
+    var res;
+    if (u==='usMpg') res = fromUsMpg(v);
+    else if (u==='ukMpg') res = fromUkMpg(v);
+    else if (u==='l100') res = fromL100(v);
+    else res = fromKmL(v);
+
+    if (!res){
+      showConvError('Please enter a positive number. Fuel efficiency must be greater than zero.');
+      [ru,rk,rl,rm].forEach(function(el){ el.textContent='–'; });
+      needle.style.left = '0%';
+      pill.textContent = '–'; pill.style.background = '#166534';
+      blurb.textContent = 'Enter a valid value in the converter to see your rating.';
+      updateTrip(null);
+      return;
+    }
+    showConvError(null);
+    ru.textContent = fmt(res.usMpg, 1);
+    rk.textContent = fmt(res.ukMpg, 1);
+    rl.textContent = fmt(res.l100, 2);
+    rm.textContent = fmt(res.kmL, 2);
+
+    var pos = gaugePosition(res.l100);
+    needle.style.left = (pos*100).toFixed(2) + '%';
+    var b = ratingForL100(res.l100);
+    pill.textContent = b.label + ' · ' + fmt(res.l100,1) + ' L/100km';
+    pill.style.background = b.color;
+    if (b.id==='good'||b.id==='average') pill.style.color = '#1C1917'; else pill.style.color = '#fff';
+    blurb.textContent = b.blurb + ' (US: ' + fmt(res.usMpg,1) + ' MPG · UK: ' + fmt(res.ukMpg,1) + ' MPG · ' + fmt(res.kmL,1) + ' km/L)';
+    updateTrip(res.l100);
+  }
+
+  function updateTrip(l100){
+    var price = parseFloat(tpr.value), dist = parseFloat(tdi.value);
+    var cur = (tcur.value||'$').slice(0,4);
+    $('tc-cur1').textContent = cur; $('tc-cur2').textContent = cur; $('tc-cur3').textContent = cur;
+    var bad = null;
+    if (l100==null) bad = 'Set a valid efficiency in the converter above first.';
+    else if (!(price>=0)) bad = 'Fuel price must be zero or a positive number.';
+    else if (!(dist>=0)) bad = 'Trip distance must be zero or a positive number.';
+    if (bad){
+      tcerr.textContent = bad; tcerr.classList.remove('hidden');
+      $('tc-litres').textContent='–'; $('tc-cost').textContent='–';
+      $('tc-c100km').textContent='–'; $('tc-c100mi').textContent='–';
+      return;
+    }
+    tcerr.classList.add('hidden');
+    var t = tripCost(l100, price, dist, tun.value);
+    $('tc-litres').textContent = fmt(t.litres, 2);
+    $('tc-cost').textContent = fmt(t.cost, 2);
+    $('tc-c100km').textContent = fmt(t.costPer100km, 2);
+    $('tc-c100mi').textContent = fmt(t.costPer100mi, 2);
+  }
+
+  function savePrefs(){
+    try { localStorage.setItem('sipmile-prefs', JSON.stringify({
+      currency: tcur.value, price: tpr.value, unit: cu.value, tunit: tun.value
+    })); } catch(e){}
+  }
+
+  [cv,cu].forEach(function(el){ el.addEventListener('input', function(){ update(); savePrefs(); }); });
+  [tcur,tpr,tdi,tun].forEach(function(el){ el.addEventListener('input', function(){ update(); savePrefs(); }); });
+  update();
+})();
+</script>
+</body>
+</html>
